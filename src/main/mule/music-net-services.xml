@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:core="http://www.mulesoft.org/schema/mule/core"
+	xmlns:java="http://www.mulesoft.org/schema/mule/java"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:oauth2-provider="http://www.mulesoft.org/schema/mule/oauth2-provider"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd http://www.mulesoft.org/schema/mule/oauth2-provider http://www.mulesoft.org/schema/mule/oauth2-provider/current/mule-oauth2-provider.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd">
+
+	<flow name="music-net-api-main">
+		<apikit:router config-ref="music-net-api-config" />
+		<error-handler ref="globalErrorHandler" />
+	</flow>
+
+	<flow name="get:\musical\skills:music-net-api-config">
+		<flow-ref doc:name="Flow Reference"
+			doc:id="761a62f7-8032-450d-9434-0ecc9b368d8b"
+			name="oauth2tokenvalidation" target="isValidAccessToken" />
+		<flow-ref doc:name="Flow Reference" doc:id="7473f004-c39b-4db6-87a6-034d7a8712fe" name="fetch-musical-skills"/>
+	</flow>
+
+
+	<flow name="get:\artists\(ID):music-net-api-config">
+		<flow-ref doc:name="Flow Reference"
+			doc:id="114111a4-79e7-439b-9b12-36bb75f3dbd3"
+			name="oauth2tokenvalidation" target="isValidAccessToken" />
+		<flow-ref doc:name="Flow Reference" doc:id="a1898637-5a89-4717-9803-af53137b895a" name="fetch-artist-by-id"/>
+	</flow>
+
+	<flow name="get:\artists:music-net-api-config">
+		<flow-ref doc:name="Flow Reference"
+			doc:id="252b9467-4cc2-43f7-a9c4-cec4fe4d752a"
+			name="oauth2tokenvalidation" target="isValidAccessToken" />
+		<flow-ref doc:name="Flow Reference" doc:id="34514bdd-8dd8-4d9d-814f-67c33c1c613d" name="fetch-artist"/>		
+	</flow>
+
+	<flow name="put:\artists:application\json:music-net-api-config">
+		<logger level="INFO"
+			message="put:\artists:application\json:music-net-api-config" />
+	</flow>
+	<flow name="delete:\artists:music-net-api-config">
+		<flow-ref doc:name="Flow Reference"
+			doc:id="75d57ebe-d993-4c26-adfb-ace93849d2ee"
+			name="oauth2tokenvalidation" target="isValidAccessToken" />
+		<flow-ref doc:name="Flow Reference" doc:id="e6f6d065-6868-477d-ac53-6cd302e4f92a" name="delete-artist-by-id"/>
+
+	</flow>
+
+	<flow name="post:\artists:application\json:music-net-api-config">
+		<flow-ref doc:name="Flow Reference"
+			doc:id="626eecd9-a5d8-48d0-815e-9bbb726ed6b7"
+			name="oauth2tokenvalidation" target="isValidAccessToken" />
+		<flow-ref doc:name="Flow Reference" doc:id="b747b6b1-e191-483e-af32-9e50c0b64e29" name="create-new-artist"/>
+
+	</flow>
+	
+
+	<flow
+		name="post:\band\member\invite\accept:application\json:music-net-api-config">
+		<logger level="INFO"
+			message="post:\band\member\invite\accept:application\json:music-net-api-config" />
+	</flow>
+	<flow name="post:\login:application\json:music-net-api-config">
+		<logger level="INFO"
+			message="post:\login:application\json:music-net-api-config" />
+	</flow>
+	<flow
+		name="post:\band\member\invite\new:application\json:music-net-api-config">
+		<logger level="INFO"
+			message="post:\band\member\invite\new:application\json:music-net-api-config" />
+	</flow>
+	<flow
+		name="post:\send\message:application\json:music-net-api-config">
+		<logger level="INFO"
+			message="post:\send\message:application\json:music-net-api-config" />
+	</flow>
+
+
+	<flow name="music-net-api-console">
+		<http:listener
+			config-ref="music-net-api-httpListenerConfig" path="/console/*">
+			<http:response
+				statusCode="#[vars.httpStatus default 200]">
+				<http:headers>#[vars.outboundHeaders default {}]</http:headers>
+			</http:response>
+			<http:error-response
+				statusCode="#[vars.httpStatus default 500]">
+				<http:body>#[payload]</http:body>
+				<http:headers>#[vars.outboundHeaders default {}]</http:headers>
+			</http:error-response>
+		</http:listener>
+		<apikit:console config-ref="music-net-api-config" />
+		<error-handler ref="globalErrorHandler" />
+	</flow>
+</mule>

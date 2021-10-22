@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<error-handler name="globalErrorHandler">
+	
+		<on-error-propagate
+			type="CUSTOM:ACCESS_TOKEN_MISSING" >
+			<set-variable value="Access token is not present"
+				variableName="message" />
+			<set-variable value="Please provide access token as http header"
+				variableName="detailedMessage" />
+			<set-variable value="401" variableName="httpStatus" />
+			<set-variable value="401" variableName="serviceStatusCode" />
+			<parse-template location="template/ServiceResponse" />
+		</on-error-propagate>
+		<on-error-propagate
+			type="OAUTH2-PROVIDER:TOKEN_UNAUTHORIZED" >
+			<set-variable value="Invalid access token"
+				variableName="message" />
+			<set-variable value="Provided access token is invalid"
+				variableName="detailedMessage" />
+			<set-variable value="401" variableName="httpStatus" />
+			<set-variable value="401" variableName="serviceStatusCode" />
+			<parse-template location="template/ServiceResponse" />
+		</on-error-propagate>
+
+		<on-error-propagate type="APIKIT:BAD_REQUEST">
+			<set-variable value="Bad request" variableName="message" />
+			<set-variable value="Request data is invalid"
+				variableName="detailedMessage" />
+			<set-variable value="400" variableName="httpStatus" />
+			<parse-template location="template/ServiceResponse" />
+		</on-error-propagate>
+		
+		<on-error-propagate type="APIKIT:NOT_FOUND">
+			<set-variable value="Resource not found"
+				variableName="message" />
+			<set-variable
+				value="Resource not found please contact admin"
+				variableName="detailedMessage" />
+			<set-variable value="404" variableName="httpStatus" />
+			<parse-template location="template/ServiceResponse" />
+		</on-error-propagate>
+		
+		<on-error-propagate
+			type="APIKIT:METHOD_NOT_ALLOWED">
+			<set-variable value="Method not allowed"
+				variableName="message" />
+			<set-variable
+				value="Method not allowed please contact admin"
+				variableName="detailedMessage" />
+			<set-variable value="405" variableName="httpStatus" />
+			<parse-template location="template/ServiceResponse" />
+		</on-error-propagate>
+		
+		<on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+			<set-variable value="Not acceptable"
+				variableName="message" />
+			<set-variable
+				value="Not acceptable please contact admin"
+				variableName="detailedMessage" />
+			<set-variable value="406" variableName="httpStatus" />
+			<parse-template location="template/ServiceResponse" />
+		</on-error-propagate>
+		
+		<on-error-propagate
+			type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+			<set-variable value="Unsupported media type"
+				variableName="message" />
+			<set-variable
+				value="Unsupported media type please contact admin"
+				variableName="detailedMessage" />
+			<set-variable value="415" variableName="httpStatus" />
+			<parse-template location="template/ServiceResponse" />
+		</on-error-propagate>
+		
+		<on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+			<set-variable value="Not Implemented"
+				variableName="message" />
+			<set-variable
+				value="Not Implemented please contact admin"
+				variableName="detailedMessage" />
+			<set-variable value="501" variableName="httpStatus" />
+			<parse-template location="template/ServiceResponse" />
+		</on-error-propagate>
+	</error-handler>
+</mule>

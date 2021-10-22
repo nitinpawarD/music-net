@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="proxy-services-test-suite.xml" />
+	<munit:test name="proxy-services-test-suite-music-net-proxy-mainTest" doc:id="a795c740-5aae-4318-b9df-ec7b2c2acd5d" description="Test">
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to music-net-proxy-main" doc:id="73da8ef6-d44d-472b-a884-7474ef0de9df" name="music-net-proxy-main"/>
+		</munit:execution>
+		<munit:validation >
+		</munit:validation>
+	</munit:test>
+
+
+</mule>

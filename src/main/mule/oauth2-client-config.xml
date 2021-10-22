@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:oauth2-provider="http://www.mulesoft.org/schema/mule/oauth2-provider"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/oauth2-provider http://www.mulesoft.org/schema/mule/oauth2-provider/current/mule-oauth2-provider.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow name="oauth-client-operationsFlow"
+		doc:id="c6249831-a007-4400-906f-416ba3606fd3">
+		
+		<http:listener doc:name="Listener"
+			doc:id="caeab175-fa87-4ce7-95b9-9608bf190327"
+			config-ref="music-net-api-httpListenerConfig"
+			path="/oauth2/create_client" />
+		<set-variable value="#[attributes.headers.client_name]" variableName="client_name" />	
+		
+		<logger level="INFO" message="#[vars.client_id]" />	
+		<oauth2-provider:create-client doc:name="Create client" doc:id="c4053c62-c2ec-4f95-8875-7241dd927463" config-ref="OAuth2_Provider_Config" 
+			clientId="attributes.headers.client_id" secret="attributes.headers.client_secret" 
+			clientName="attributes.headers.client_name" authorizedGrantTypes='#[["CLIENT_CREDENTIALS"]]' 
+			redirectUris='#[["localhost:8081/oauth2/redirect","localhost:8081/oauth2/tokenredirect"]]' 
+			scopes='#[["ALL"]]'/>
+			
+	    <set-variable value="#[attributes.headers.client_id]" variableName="message" />
+		<set-variable value="#[attributes.headers.client_secret]" variableName="detailedMessage" />
+		<set-variable value="201" variableName="httpStatus" />
+		<set-variable value="201" variableName="serviceStatusCode" />
+		<parse-template location="template/ServiceResponse" />
+	</flow>
+</mule>

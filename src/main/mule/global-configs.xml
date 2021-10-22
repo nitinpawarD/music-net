@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:oauth2-provider="http://www.mulesoft.org/schema/mule/oauth2-provider"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:spring="http://www.mulesoft.org/schema/mule/spring"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/oauth2-provider http://www.mulesoft.org/schema/mule/oauth2-provider/current/mule-oauth2-provider.xsd
+http://www.springframework.org/schema/beans http://www.mulesoft.org/schema/mule/db 
+http://www.springframework.org/schema/beans/spring-beans.xsd">
+	<configuration-properties
+		file="properties/global-config.properties" />
+	<configuration-properties
+		file="properties/db-config.properties" />
+
+	<http:listener-config
+		name="music-net-api-httpListenerConfig">
+		<http:listener-connection
+			host="${music.net.api.proxy.host}" port="${music.net.api.proxy.port}" />
+	</http:listener-config>
+
+	<os:object-store name="clientstore"
+		doc:name="Object store" doc:id="0792c66e-becc-4fa8-9b5a-36effb848297"
+		maxEntries="10" />
+	<os:object-store name="tokenstore"
+		doc:name="Object store" doc:id="56c1df4b-80ab-4542-8553-be22d03f4e37" />
+
+	<oauth2-provider:config
+		name="OAuth2_Provider_Config"
+		listenerConfig="music-net-api-httpListenerConfig"
+		resourceOwnerSecurityProvider="resourceOwnerSecurityProvider"
+		supportedGrantTypes="CLIENT_CREDENTIALS" scopes="ALL"
+		clientStore="clientstore">
+
+		<oauth2-provider:client-validation-rate-limiter>
+			<oauth2-provider:period-rate-limiter
+				duration="600" durationTimeUnit="SECONDS" maximumFailureCount="5" />
+		</oauth2-provider:client-validation-rate-limiter>
+
+		<oauth2-provider:token-config
+			path="/token" tokenStore="tokenstore"
+			tokenTtl="${music.net.api.ttlseconds}" tokenTtlTimeUnit="SECONDS">
+		</oauth2-provider:token-config>
+
+		<oauth2-provider:clients>
+			<oauth2-provider:client
+				clientId="${music.net.api.consumer.client.id}"
+				clientName="musicNet-UI"
+				secret="${music.net.api.consumer.client.secret}" principal="clusr"
+				description="Test client" type="CONFIDENTIAL">
+
+				<oauth2-provider:client-redirect-uris>
+					<oauth2-provider:client-redirect-uri
+						value="http://localhost:8081/redirect" />
+				</oauth2-provider:client-redirect-uris>
+
+				<oauth2-provider:client-authorized-grant-types>
+					<oauth2-provider:client-authorized-grant-type
+						value="CLIENT_CREDENTIALS" />
+				</oauth2-provider:client-authorized-grant-types>
+
+				<oauth2-provider:client-scopes>
+					<oauth2-provider:client-scope
+						value="ALL" />
+				</oauth2-provider:client-scopes>
+
+			</oauth2-provider:client>
+		</oauth2-provider:clients>
+	</oauth2-provider:config>
+
+	 <db:config name="Database_Config" doc:name="Database Config" doc:id="f76b51ba-458a-48fe-bd56-de00cd2049be"> 
+		<db:data-source-connection dataSourceRef="dataSource"> <reconnection failsDeployment="true"> 
+		<reconnect count="3" /> </reconnection> <db:pooling-profile /> </db:data-source-connection> 
+		</db:config> 
+		<!-- <db:config name="Database_Config">
+		<db:my-sql-connection host="localhost"
+			port="1234" />
+	</db:config>
+ -->
+	<apikit:config name="music-net-api-config"
+		api="resource::566f7d96-3b98-4322-b750-22bb4258e20f:music-net-api:1.0.2:raml:zip:music-net-api.raml"
+		outboundHeadersMapName="outboundHeaders" disableValidations="true"
+		httpStatusVarName="httpStatus" />
+
+</mule>

@@ -1,0 +1,5 @@
+{
+  "serviceStatusCode": "#[vars.serviceStatusCode]"
+  "message": "#[vars.message]"
+  "detailedMessage": "#[vars.detailedMessage]"
+} 

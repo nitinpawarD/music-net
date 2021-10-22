@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_e2ee1dc0_a370_4efb_b9ec_feab8dc7f8ac_Input_Variables_isValidAccessToken = String
+

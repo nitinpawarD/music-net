@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+	xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:dbserver="http://www.mulesoft.org/schema/mule/dbserver"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+		http://www.mulesoft.org/schema/mule/dbserver http://www.mulesoft.org/schema/mule/dbserver/current/mule-dbserver.xsd
+		http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/dbserver http://www.mulesoft.org/schema/mule/dbserver/current/mule-dbserver.xsd">
+
+	<db:config name="Database_Config_test">
+		<db:generic-connection
+			url="jdbc:h2:tcp://localhost/mem:musicnet"
+			driverClassName="org.h2.Driver" />
+	</db:config>
+	
+	<dbserver:config doc:name="MUnit DB Server Config"
+		name="MUnit_DB_Server_Config"
+		doc:id="3cfa80c9-a0f6-4fa6-803d-444e29c5724e">
+		<dbserver:connection database="musicnet"
+			connectionStringParameters="MODE=MySQL" sqlFile="db/db_script.sql" />
+	</dbserver:config>
+	
+	<munit:config name="fetch-and-format-data-test-suite.xml" />
+	<munit:test
+		name="fetch-and-format-data-test-suite-fetch-musical-skillsTest"
+		doc:id="63e4be47-711d-48b7-9544-e38f928901c4" description="Test"
+		ignore="true">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock when" doc:id="19f29a5d-8361-4699-b914-a7c6affab217" processor="db:select">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Select" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+  <munit-tools:payload value="#[readUrl('classpath://mockdata/mocked-musical-skills-data.dwl')]" />
+</munit-tools:then-return>
+			</munit-tools:mock-when>
+			</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="Flow-ref to fetch-musical-skills"
+				doc:id="57c40813-0e10-435b-8e39-53e9c530ea9f"
+				name="fetch-musical-skills" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that
+				doc:name="Assert that" doc:id="c5fe0bf4-aec8-4f1d-855d-b7b35b49e861"
+				expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+		</munit:validation>
+	</munit:test>
+	<munit:test
+		name="fetch-and-format-data-test-suite-fetch-musical-skillsTest-db"
+		doc:id="1ec7c788-2050-43c5-906e-3d2fe13b0ccf" description="Test">
+		<!-- <munit:behavior >
+			<dbserver:execute doc:name="Execute" doc:id="993e6c52-f3d7-4aa0-88eb-1b137d081815" config-ref="MUnit_DB_Server_Config"
+			 sql="INSERT INTO musical_skill values(1001,'Bell','Agoga');"/>
+		</munit:behavior> -->
+		<munit:execution>
+			<flow-ref doc:name="Flow-ref to fetch-musical-skills"
+				doc:id="0ce1f8b8-2c0d-4da0-ab0e-18f38b266a29"
+				name="fetch-musical-skills" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that
+				doc:name="Assert that" doc:id="9431a80a-8069-45ce-8779-3c0bc53b8743"
+				expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+		</munit:validation>
+	</munit:test>
+</mule>

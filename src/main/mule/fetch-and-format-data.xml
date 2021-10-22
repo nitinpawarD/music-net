@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:core="http://www.mulesoft.org/schema/mule/core"
+	xmlns:java="http://www.mulesoft.org/schema/mule/java"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:oauth2-provider="http://www.mulesoft.org/schema/mule/oauth2-provider"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd http://www.mulesoft.org/schema/mule/oauth2-provider http://www.mulesoft.org/schema/mule/oauth2-provider/current/mule-oauth2-provider.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd">
+
+	<ee:object-store-caching-strategy name="Caching_Strategy" doc:name="Caching Strategy" doc:id="30722de8-ec5d-4e86-83f2-0a0320b4cc54" objectStore="tokenstore" />
+	<sub-flow name="fetch-artist"
+		doc:id="00604673-2121-4cee-8909-8226b60e7637">
+		<java:new doc:name="ArrayList of ArtistData"
+			class="java.util.ArrayList" target="artistList"
+			constructor="ArrayList()" />
+			<db:select doc:name="Select" doc:id="5df328fc-0dc6-409a-a836-db4b69a573e1" config-ref="${db.datasource}">
+			<db:sql>
+				<![CDATA[select id, name, description from artist]]>
+			   </db:sql>
+		</db:select>
+			<foreach doc:name="For Each" doc:id="fc218419-680e-4eea-aedc-c9d14cde8a6d" counterVariableName="counter">
+			<db:select doc:name="Select" doc:id="2c21ca0a-fb89-4eb6-96d1-07c3aa4462ad" config-ref="${db.datasource}" target="musicalSkills">
+				<db:sql>
+					<![CDATA[
+							select ms.id, ms.category, ms.instrument
+							from artist_musical_skill ams 
+							inner join musical_skill ms on ms.id = ams.musical_skill_id
+							where ams.artist_id = :artistId
+					]]>
+			   	</db:sql>
+				<db:input-parameters>
+	      			#[{'artistId' : payload.id}]
+	    		</db:input-parameters>
+			</db:select>
+			<java:new class="com.music.net.ArtistData" constructor="ArtistData(java.lang.Integer,java.lang.String,java.lang.String,java.util.List)" target="ArtistObject">
+				<java:args>#[{
+					artistId: payload.id,
+					name: payload.name,
+					description: payload.description,
+					musicalSkill: vars.musicalSkills
+					}]</java:args>
+			</java:new>
+			<choice doc:name="Choice" doc:id="d7a65fe2-7684-4ebc-88fb-1fcb5271bfca">
+				<when expression="#[isEmpty(vars.artistUriId)]">
+					<java:invoke doc:name="Add an element ArtistData" instance="#[vars.artistList]" class="java.util.ArrayList" method="add(java.lang.Object)">
+						<java:args>
+						<![CDATA[#[{
+							arg0 : vars.ArtistObject
+						}]]]>
+					</java:args>
+
+					</java:invoke>
+				</when>
+			</choice>
+
+		</foreach>
+			<ee:transform doc:name="Transform Message" doc:id="1b4e6cf9-d8f0-43cf-87a8-24c651e51888">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+							output application/json
+							---
+							vars.artistList map {
+								"id" :  $.artistId,
+								"name" : $.name,
+								"description" :  $.description,
+								"musical_skills" : $.musicalSkill map {
+									"category" : $.category,
+									"instrument" : $.instrument
+								}
+							}
+						]]>
+				</ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		
+	</sub-flow>
+	<sub-flow name="fetch-artist-by-id"
+		doc:id="3bb31a02-0c2a-4616-bdd2-9fde46655617">
+		<set-variable value="#[attributes.uriParams.ID]"
+			doc:name="Set Variable" doc:id="bf964354-6f28-433f-9751-59333f042bd3"
+			variableName="artistUriId" />
+		<db:select doc:name="Select"
+			doc:id="fb31a3ad-2734-49fa-89ca-b72998fc0d20"
+			config-ref="${db.datasource}" target="artistData">
+			<db:sql>
+					<![CDATA[
+							select id, name, description from artist where id = :artistId
+					]]>
+			   	</db:sql>
+			<db:input-parameters>
+	      			#[{'artistId' : vars.artistUriId}]
+	    		</db:input-parameters>
+		</db:select>
+		<db:select doc:name="Select"
+			doc:id="928fb435-fd77-4e42-b25b-b2932f04fcb4"
+			config-ref="${db.datasource}" target="musicalSkills">
+			<db:sql>
+					<![CDATA[
+							select ms.id as id, ms.category as category, ms.instrument as instrument
+							from artist_musical_skill ams 
+							inner join musical_skill ms on ms.id = ams.musical_skill_id
+							where ams.artist_id = :artistId
+					]]>
+			   	</db:sql>
+			<db:input-parameters>
+	      			#[{'artistId' : vars.artistUriId}]
+	    		</db:input-parameters>
+		</db:select>
+
+		<ee:transform doc:name="Transform Message"
+			doc:id="65b3d884-ac98-40a4-9084-6a569c7463fe">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+								output application/json
+								---
+								{
+									"id" : vars.artistData.id[0],
+									"name" : vars.artistData.name[0],
+									"description" : vars.artistData.description[0],
+									"musical_skills" : vars.musicalSkills map {
+										"category" : $.category,
+										"instrument" : $.instrument
+									}
+								}
+								
+							]]>
+				</ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+
+	
+	<sub-flow name="create-new-artist"
+		doc:id="3254b25b-8c65-4557-9317-e8eb4c10628c">
+		<try doc:name="Try" doc:id="10004b25-640c-4342-9fde-89bcedcfb665" transactionalAction="ALWAYS_BEGIN">
+			<db:insert doc:name="Insert" doc:id="58342779-57dc-45c0-a899-1c8897b3dfdf" config-ref="${db.datasource}" transactionalAction="ALWAYS_JOIN">
+		    	<db:sql>
+			        INSERT INTO artist(id, name, description)
+			        VALUES (:artist_id, :name, :description)
+			    </db:sql>
+			    <db:input-parameters>#[{
+			        artist_id: payload.id,
+			        name: payload.name,
+			        description: payload.description
+			        }]
+			    </db:input-parameters>
+			</db:insert>		
+		</try>
+			<set-variable value="Artist created"
+				variableName="message" />
+			<set-variable value="Artist created successfully"
+				variableName="detailedMessage" />
+			<set-variable value="201" variableName="httpStatus" />
+			<set-variable value="201" variableName="serviceStatusCode" />
+			<parse-template location="template/ServiceResponse" />
+	
+	</sub-flow>
+	
+	<sub-flow name="delete-artist-by-id" doc:id="6132bcbd-a7b0-4d74-b5be-bf474d9c07b6">
+	<try doc:name="Try" doc:id="f756f122-bbe3-4237-b662-707ad7927982" transactionalAction="ALWAYS_BEGIN">
+			<db:insert doc:name="Insert" doc:id="08b52bdc-7f69-49ab-9632-450958e21db2" config-ref="${db.datasource}" transactionalAction="ALWAYS_JOIN">
+		    	<db:sql>
+			        INSERT INTO artist(id, name, description)
+			        VALUES (:artist_id, :name, :description)
+			    </db:sql>
+			    <db:input-parameters>#[{
+			        artist_id: payload.id,
+			        name: payload.name,
+			        description: payload.description
+			        }]
+			    </db:input-parameters>
+			</db:insert>		
+		</try>
+			<set-variable value="Artist created"
+				variableName="message" />
+			<set-variable value="Artist created successfully"
+				variableName="detailedMessage" />
+			<set-variable value="201" variableName="httpStatus" />
+			<set-variable value="201" variableName="serviceStatusCode" />
+			<parse-template location="template/ServiceResponse" />
+	</sub-flow>
+
+	<sub-flow name="fetch-musical-skills"
+		doc:id="e2ee1dc0-a370-4efb-b9ec-feab8dc7f8ac">
+		<db:select doc:name="Select"
+			doc:id="1be83911-4c33-4410-b090-ec40dfadcdbe"
+			config-ref="${db.datasource}">
+			<db:sql><![CDATA[select id, category, instrument from PUBLIC.musical_skill]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message"
+			doc:id="13fb015c-94bf-4b59-868c-1c72a5441f5f">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload map {
+	id : $.id,
+	category : $.category,
+	instrument : $.instrument
+} ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+
+	</sub-flow>
+
+</mule>

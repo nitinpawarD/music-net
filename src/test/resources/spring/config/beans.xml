@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:ss="http://www.springframework.org/schema/security"
+       xmlns:spring="http://www.mulesoft.org/schema/mule/spring"
+       xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"   
+       xsi:schemaLocation="http://www.mulesoft.org/schema/mule/spring
+        http://www.mulesoft.org/schema/mule/spring/current/mule-spring.xsd http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-5.4.xsd">
+
+    <ss:authentication-manager alias="resourceOwnerAuthenticationManager">
+        <ss:authentication-provider>
+            <ss:user-service id="resourceOwnerUserService">
+                <ss:user name="${music.net.api.consumer.client.id}" password="${music.net.api.consumer.client.secret}" authorities="RESOURCE_OWNER"/>
+            </ss:user-service>
+        </ss:authentication-provider>
+    </ss:authentication-manager>
+    
+     <bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
+        <constructor-arg ref="digitalConnectionPool"/>
+    </bean>
+    
+
+    <bean id="digitalConnectionPool" class="com.zaxxer.hikari.HikariConfig">
+        <property name="jdbcUrl" value="jdbc:h2:mem:musicnet"/>
+        <property name="driverClassName" value="org.h2.Driver" />  
+       	<property name="connectionTestQuery" value="VALUES 1"/>
+       	<property name="dataSourceProperties">
+            <props>
+                <prop key="user">sa</prop>
+                <prop key="password"></prop>
+            </props>
+        </property>
+    </bean>
+</beans>
